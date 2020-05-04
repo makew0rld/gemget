@@ -16,6 +16,14 @@ Usage of gemget:
       --skip               Move to the next URL when one fails. (default true)
 ```
 
+# Installation
+You can install a binary from the [releases page](https://github.com/makeworld-the-better-one/gemget/releases/).
+
+If you want to build it from source, install Go, and then run
+```
+go get -u github.com/makeworld-the-better-one/gemget
+```
+
 # Features to add
 - Support TOFU with a certificate fingerprint cache, and option to disable it
 - Support client certificates
