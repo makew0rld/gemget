@@ -17,13 +17,13 @@ import (
 //var cert = flag.String("cert", "", "Not implemented.")
 //var key = flag.String("key", "", "Not implemented.")
 
-var insecure = flag.Bool("insecure", false, "Skip checking the cert")
+var insecure = flag.BoolP("insecure", "i", false, "Skip checking the cert")
 var dir = flag.StringP("directory", "d", ".", "The directory where downloads go")
-var output = flag.StringP("output", "o", "", "Output file, for when there is only one URL.\n'-' means stdout.")
-var errorSkip = flag.Bool("skip", true, "Move to the next URL when one fails.")
-var follow = flag.Bool("follow", true, "Follow redirects, up to 5.")
+var output = flag.StringP("output", "o", "", "Output file, for when there is only one URL.\n'-' means stdout and implies --quiet.")
+var errorSkip = flag.BoolP("skip", "s", false, "Move to the next URL when one fails.")
 var exts = flag.BoolP("add-extension", "e", false, "Add .gmi extensions to gemini files that don't have it, like directories.")
-var quiet = flag.BoolP("quiet", "q", false, "No output except for errors.")
+var quiet bool // Set in main, so that it can be changed later if needed
+var numRedirs = flag.UintP("redirects", "r", 5, "How many redirects to follow before erroring out.")
 
 func fatal(format string, a ...interface{}) {
 	urlError(format, a...)
@@ -65,7 +65,7 @@ func saveFile(resp *gemini.Response, u *url.URL) {
 	defer f.Close()
 
 	var written int64
-	if *quiet {
+	if quiet {
 		written, err = io.Copy(f, resp.Body)
 	} else {
 		bar := progressbar.DefaultBytes(-1, "downloading")
@@ -77,7 +77,7 @@ func saveFile(resp *gemini.Response, u *url.URL) {
 	}
 }
 
-func _fetch(n int, u *url.URL, client *gemini.Client) {
+func _fetch(n uint, u *url.URL, client *gemini.Client) {
 	uStr := u.String()
 	resp, err := client.Fetch(uStr)
 	if err != nil {
@@ -91,12 +91,12 @@ func _fetch(n int, u *url.URL, client *gemini.Client) {
 		urlError("%s needs a certificate, which is not implemented yet.", uStr)
 		return
 	} else if gemini.SimplifyStatus(resp.Status) == 30 {
-		if !*follow {
+		if *numRedirs == 0 {
 			urlError("%s redirects.", uStr)
 			return
 		}
 		// Redirect
-		if n == 5 {
+		if n == *numRedirs {
 			urlError("%s redirected too many times.", uStr)
 			return
 		}
@@ -106,7 +106,9 @@ func _fetch(n int, u *url.URL, client *gemini.Client) {
 			urlError("Redirect url %s couldn't be parsed.", resp.Meta)
 			return
 		}
-		fmt.Printf("*** Redirected to %s ***\n", resp.Meta)
+		if !quiet {
+			fmt.Printf("*** Redirected to %s ***\n", resp.Meta)
+		}
 		_fetch(n+1, u.ResolveReference(redirect), client)
 	} else if resp.Status == 10 {
 		urlError("%s needs input, which is not implemented yet. You should make the request manually with a URL query.", uStr)
@@ -128,12 +130,14 @@ func fetch(u *url.URL, client *gemini.Client) {
 }
 
 func main() {
+	flag.BoolVarP(&quiet, "quiet", "q", false, "No output except for errors.")
 	flag.Parse()
 
 	// Validate urls
 	if len(flag.Args()) == 0 {
 		flag.Usage()
-		os.Exit(0)
+		fmt.Println("\n*** No URLs provided. ***")
+		os.Exit(1)
 	}
 	urls := make([]*url.URL, len(flag.Args()))
 	for i, u := range flag.Args() {
@@ -168,10 +172,13 @@ func main() {
 	if len(flag.Args()) > 1 && *output != "" && *output != "-" {
 		fatal("The output flag cannot be specified when there are multiple URLs, unless it is '-'.")
 	}
+	if *output == "-" {
+		quiet = true
+	}
 	// Fetch each URL
 	client := &gemini.Client{InsecureSkipVerify: *insecure}
 	for _, u := range urls {
-		if !*quiet {
+		if !quiet {
 			fmt.Printf("*** Started %s ***\n", u)
 		}
 		fetch(u, client)

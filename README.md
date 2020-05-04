@@ -17,9 +17,9 @@ Usage of gemget:
 ```
 
 # Installation
-You can install a binary from the [releases page](https://github.com/makeworld-the-better-one/gemget/releases/).
+You can install a binary of the most recent release from the [releases page](https://github.com/makeworld-the-better-one/gemget/releases/).
 
-If you want to build it from source, install Go, and then run
+If you want to get the latest updates, then install Go and run
 ```
 go get -u github.com/makeworld-the-better-one/gemget
 ```
