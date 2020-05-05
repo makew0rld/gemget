@@ -19,10 +19,12 @@ Usage of gemget:
 # Installation
 You can install a binary of the most recent release from the [releases page](https://github.com/makeworld-the-better-one/gemget/releases/).
 
-If you want to get the latest updates, then install Go and run
+If you have Go installed, you can also install it with:
 ```
-go get -u github.com/makeworld-the-better-one/gemget
+GO111MODULE=on go get -u github.com/makeworld-the-better-one/gemget
 ```
+
+If you want to install from the latest commit (not release), clone the repo and then run `go install` inside it.
 
 # Features to add
 - Support TOFU with a certificate fingerprint cache, and option to disable it
