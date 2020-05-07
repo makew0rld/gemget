@@ -6,14 +6,14 @@ A command line downloader for the [Gemini protocol](https://gemini.circumlunar.s
 gemget [option]... URL...
 
 Usage of gemget:
-  -e, --add-extension     Add .gmi extensions to gemini files that don't have it, like directories.
+  -e, --add-extension      Add .gmi extensions to gemini files that don't have it, like directories.
   -d, --directory string   The directory where downloads go (default ".")
-      --follow             Follow redirects, up to 5. (default true)
-      --insecure           Skip checking the cert
+  -i, --insecure           Skip checking the cert
   -o, --output string      Output file, for when there is only one URL.
-                           '-' means stdout.
+                           '-' means stdout and implies --quiet.
   -q, --quiet              No output except for errors.
-      --skip               Move to the next URL when one fails. (default true)
+  -r, --redirects uint     How many redirects to follow before erroring out. (default 5)
+  -s, --skip               Move to the next URL when one fails.
 ```
 
 # Installation
@@ -30,6 +30,8 @@ If you want to install from the latest commit (not release), clone the repo and 
 - Support TOFU with a certificate fingerprint cache, and option to disable it
 - Support client certificates
   - This requires forking the [go-gemini](https://git.sr.ht/~yotam/go-gemini) library this project uses, as it doesn't support that
+- Support self-signed certs
+  - Using `--insecure` can get around this, but this also disables checking for expiry dates, etc.
 - Support interactive input for status code 10
 - Read URLs from file
 
