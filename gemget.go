@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"net/url"
+    "net"
 	"os"
 	"path"
 	"path/filepath"
@@ -159,7 +160,7 @@ func main() {
 		}
 		if parsed.Port() == "" {
 			// Add port, gemini library requires it
-			parsed.Host = parsed.Hostname() + ":" + "1965"
+			parsed.Host = net.JoinHostPort(parsed.Hostname(), "1965")
 		}
 		if parsed.Path == "" {
 			// Add slash to the end of domains to prevent redirects
