@@ -17,7 +17,10 @@ Usage of gemget:
 ```
 
 # Installation
-You can install a binary of the most recent release from the [releases page](https://github.com/makeworld-the-better-one/gemget/releases/).
+```
+curl -sf https://gobinaries.com/makeworld-the-better-one/gemget | sh
+```
+Or install a binary of the most recent release from the [releases page](https://github.com/makeworld-the-better-one/gemget/releases/).
 
 If you have Go installed, you can also install it with:
 ```
