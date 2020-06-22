@@ -3,14 +3,14 @@ package main
 import (
 	"fmt"
 	"io"
+	"net"
 	"net/url"
-    "net"
 	"os"
 	"path"
 	"path/filepath"
 	"strings"
 
-	gemini "git.sr.ht/~yotam/go-gemini"
+	"github.com/makeworld-the-better-one/go-gemini"
 	"github.com/schollz/progressbar/v3"
 	flag "github.com/spf13/pflag"
 )
@@ -119,7 +119,7 @@ func _fetch(n uint, u *url.URL, client *gemini.Client) {
 			io.Copy(os.Stdout, resp.Body)
 			return
 		}
-		saveFile(&resp, u)
+		saveFile(resp, u)
 		return
 	} else {
 		urlError("%s returned status %d, skipping.", u, resp.Status)
@@ -177,7 +177,7 @@ func main() {
 		quiet = true
 	}
 	// Fetch each URL
-	client := &gemini.Client{InsecureSkipVerify: *insecure}
+	client := &gemini.Client{Insecure: *insecure}
 	for _, u := range urls {
 		if !quiet {
 			fmt.Printf("*** Started %s ***\n", u)

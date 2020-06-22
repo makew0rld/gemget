@@ -32,10 +32,7 @@ If you want to install from the latest commit (not release), clone the repo and 
 # Features to add
 - Support TOFU with a certificate fingerprint cache, and option to disable it
 - Support client certificates
-  - This requires forking the [go-gemini](https://git.sr.ht/~yotam/go-gemini) library this project uses, as it doesn't support that
-- Support self-signed certs
-  - Using `--insecure` can get around this, but this also disables checking for expiry dates, etc.
-- Support interactive input for status code 10
+- Support interactive input for status code 10 & 11
 - Read URLs from file
 
 ## License
