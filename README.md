@@ -9,8 +9,9 @@ Usage of gemget:
   -e, --add-extension      Add .gmi extensions to gemini files that don't have it, like directories.
   -d, --directory string   The directory where downloads go (default ".")
   -i, --insecure           Skip checking the cert
-  -o, --output string      Output file, for when there is only one URL.
+  -o, --output string      Output path, for when there is only one URL.
                            '-' means stdout and implies --quiet.
+                           It overrides --directory.
   -q, --quiet              No output except for errors.
   -r, --redirects uint     How many redirects to follow before erroring out. (default 5)
   -s, --skip               Move to the next URL when one fails.

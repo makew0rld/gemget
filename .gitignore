@@ -1,5 +1,7 @@
-
+# Binaries
 build
+gemget
+gemget-*
 
 # Created by https://www.gitignore.io/api/go,linux,code
 # Edit at https://www.gitignore.io/?templates=go,linux,code

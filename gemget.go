@@ -20,7 +20,7 @@ import (
 
 var insecure = flag.BoolP("insecure", "i", false, "Skip checking the cert")
 var dir = flag.StringP("directory", "d", ".", "The directory where downloads go")
-var output = flag.StringP("output", "o", "", "Output file, for when there is only one URL.\n'-' means stdout and implies --quiet.")
+var output = flag.StringP("output", "o", "", "Output path, for when there is only one URL.\n'-' means stdout and implies --quiet.\nIt overrides --directory.")
 var errorSkip = flag.BoolP("skip", "s", false, "Move to the next URL when one fails.")
 var exts = flag.BoolP("add-extension", "e", false, "Add .gmi extensions to gemini files that don't have it, like directories.")
 var quiet bool // Set in main, so that it can be changed later if needed
@@ -45,10 +45,10 @@ func urlError(format string, a ...interface{}) {
 
 func saveFile(resp *gemini.Response, u *url.URL) {
 	var name string
-	if *output != "" {
-		name = *output
-	} else {
-		name = path.Base(u.Path) // Filename from URL
+	var savePath string
+
+	if *output == "" {
+		name := path.Base(u.Path) // Filename from URL
 		if name == "/" || name == "." {
 			// Domain is being downloaded, so there's no path/file
 			name = u.Hostname()
@@ -57,9 +57,13 @@ func saveFile(resp *gemini.Response, u *url.URL) {
 			// It's a gemini file, but it doesn't have that extension - and the user wants them added
 			name += ".gmi"
 		}
+		savePath = filepath.Join(*dir, name)
+	} else {
+		// There is an output path
+		savePath = *output
 	}
 
-	f, err := os.OpenFile(filepath.Join(*dir, name), os.O_CREATE|os.O_WRONLY, 0644)
+	f, err := os.OpenFile(savePath, os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
 		fatal("Error saving file %s", name)
 	}
