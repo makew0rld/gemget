@@ -12,7 +12,7 @@ Usage of gemget:
   -o, --output string      Output path, for when there is only one URL.
                            '-' means stdout and implies --quiet.
                            It overrides --directory.
-  -q, --quiet              No output except for errors.
+  -q, --quiet              No info strings will be printed. Note that normally infos are printed to stderr, not stdout.
   -r, --redirects uint     How many redirects to follow before erroring out. (default 5)
   -s, --skip               Move to the next URL when one fails.
 ```

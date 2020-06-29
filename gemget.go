@@ -33,9 +33,9 @@ func fatal(format string, a ...interface{}) {
 
 func urlError(format string, a ...interface{}) {
 	if strings.HasPrefix(format, "\n") {
-		format = "*** " + format[:len(format)-1] + " ***\n"
+		format = "Error: " + format[:len(format)-1] + "\n"
 	} else {
-		format = "*** " + format + " ***\n"
+		format = "Error: " + format + "\n"
 	}
 	fmt.Fprintf(os.Stderr, format, a...)
 	if !*errorSkip {
@@ -65,7 +65,7 @@ func saveFile(resp *gemini.Response, u *url.URL) {
 
 	f, err := os.OpenFile(savePath, os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
-		fatal("Error saving file %s", name)
+		fatal("Couldn't save file %s: %v", name, err)
 	}
 	defer f.Close()
 
@@ -78,7 +78,7 @@ func saveFile(resp *gemini.Response, u *url.URL) {
 		fmt.Println()
 	}
 	if err != nil {
-		fatal("Error saving file %s, %d bytes saved.", name, written)
+		fatal("Issue saving file %s, %d bytes saved: %v", name, written, err)
 	}
 }
 
@@ -97,26 +97,26 @@ func _fetch(n uint, u *url.URL, client *gemini.Client) {
 		return
 	} else if gemini.SimplifyStatus(resp.Status) == 30 {
 		if *numRedirs == 0 {
-			urlError("%s redirects.", uStr)
+			urlError("This URL redirects but redirects are disabled: %s", uStr)
 			return
 		}
 		// Redirect
 		if n == *numRedirs {
-			urlError("%s redirected too many times.", uStr)
+			urlError("URL redirected too many times: %s", uStr)
 			return
 		}
 		// Follow the recursion
 		redirect, err := url.Parse(resp.Meta)
 		if err != nil {
-			urlError("Redirect url %s couldn't be parsed.", resp.Meta)
+			urlError("Redirect URL %s couldn't be parsed.", resp.Meta)
 			return
 		}
 		if !quiet {
-			fmt.Printf("*** Redirected to %s ***\n", resp.Meta)
+			fmt.Fprintf(os.Stderr, "Info: Redirected to %s\n", resp.Meta)
 		}
 		_fetch(n+1, u.ResolveReference(redirect), client)
 	} else if resp.Status == 10 {
-		urlError("%s needs input, which is not implemented yet. You should make the request manually with a URL query.", uStr)
+		urlError("This URL needs input, you should make the request again manually: %s", uStr)
 	} else if gemini.SimplifyStatus(resp.Status) == 20 {
 		// Output to stdout, otherwise save it to a file
 		if *output == "-" {
@@ -126,7 +126,7 @@ func _fetch(n uint, u *url.URL, client *gemini.Client) {
 		saveFile(resp, u)
 		return
 	} else {
-		urlError("%s returned status %d, skipping.", u, resp.Status)
+		urlError("URL returned status %d, skipping: %s", resp.Status, u)
 	}
 }
 
@@ -135,24 +135,24 @@ func fetch(u *url.URL, client *gemini.Client) {
 }
 
 func main() {
-	flag.BoolVarP(&quiet, "quiet", "q", false, "No output except for errors.")
+	flag.BoolVarP(&quiet, "quiet", "q", false, "No info strings will be printed. Note that normally infos are printed to stderr, not stdout.")
 	flag.Parse()
 
 	// Validate urls
 	if len(flag.Args()) == 0 {
 		flag.Usage()
-		fmt.Println("\n*** No URLs provided. ***")
+		fmt.Println("\nNo URLs provided.")
 		os.Exit(1)
 	}
 	urls := make([]*url.URL, len(flag.Args()))
 	for i, u := range flag.Args() {
 		parsed, err := url.Parse(u)
 		if err != nil {
-			urlError("%s could not be parsed.", u)
+			urlError("URL could not be parsed: %s", u)
 			continue
 		}
 		if len(parsed.Scheme) != 0 && parsed.Scheme != "gemini" {
-			urlError("%s is not a gemini URL.", u)
+			urlError("Not a gemini URL: %s", u)
 			continue
 		}
 		if !strings.HasPrefix(u, "gemini://") {
@@ -175,7 +175,7 @@ func main() {
 
 	// Validate flags
 	if len(flag.Args()) > 1 && *output != "" && *output != "-" {
-		fatal("The output flag cannot be specified when there are multiple URLs, unless it is '-'.")
+		fatal("The output flag cannot be specified when there are multiple URLs, unless it is '-', meaning stdout.")
 	}
 	if *output == "-" {
 		quiet = true
@@ -184,7 +184,7 @@ func main() {
 	client := &gemini.Client{Insecure: *insecure}
 	for _, u := range urls {
 		if !quiet {
-			fmt.Printf("*** Started %s ***\n", u)
+			fmt.Fprintf(os.Stderr, "Info: Started %s\n", u)
 		}
 		fetch(u, client)
 	}
