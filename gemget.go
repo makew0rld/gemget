@@ -91,6 +91,10 @@ func _fetch(n uint, u *url.URL, client *gemini.Client) {
 	}
 	defer resp.Body.Close()
 
+	if *header {
+		fmt.Printf("Header: %d %s\n", resp.Status, resp.Meta)
+	}
+
 	// Validate status
 	if resp.Status >= 60 {
 		urlError("%s needs a certificate, which is not implemented yet.", uStr)
@@ -118,9 +122,6 @@ func _fetch(n uint, u *url.URL, client *gemini.Client) {
 	} else if gemini.SimplifyStatus(resp.Status) == 10 {
 		urlError("This URL needs input, you should make the request again manually: %s", uStr)
 	} else if gemini.SimplifyStatus(resp.Status) == 20 {
-		if *header {
-			fmt.Printf("Header: %d %s\n", resp.Status, resp.Meta)
-		}
 		// Output to stdout, otherwise save it to a file
 		if *output == "-" {
 			io.Copy(os.Stdout, resp.Body)
@@ -130,9 +131,6 @@ func _fetch(n uint, u *url.URL, client *gemini.Client) {
 		return
 	} else {
 		// Any sort of invalid status code will likely be caught by go-gemini, but this is here just in case
-		if *header {
-			fmt.Printf("Header: %d %s\n", resp.Status, resp.Meta)
-		}
 		urlError("URL returned status %d, skipping: %s", resp.Status, u)
 	}
 }
