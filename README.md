@@ -8,6 +8,8 @@ gemget [option]... URL...
 Usage of gemget:
   -e, --add-extension      Add .gmi extensions to gemini files that don't have it, like directories.
   -d, --directory string   The directory where downloads go (default ".")
+      --header             Print out (even with --quiet) the response header to stdout in the format:
+                           Header: <status> <meta>
   -i, --insecure           Skip checking the cert
   -o, --output string      Output path, for when there is only one URL.
                            '-' means stdout and implies --quiet.

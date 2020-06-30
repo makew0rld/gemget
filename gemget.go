@@ -24,6 +24,7 @@ var errorSkip = flag.BoolP("skip", "s", false, "Move to the next URL when one fa
 var exts = flag.BoolP("add-extension", "e", false, "Add .gmi extensions to gemini files that don't have it, like directories.")
 var quiet bool // Set in main, so that it can be changed later if needed
 var numRedirs = flag.UintP("redirects", "r", 5, "How many redirects to follow before erroring out.")
+var header = flag.Bool("header", false, "Print out (even with --quiet) the response header to stdout in the format:\nHeader: <status> <meta>")
 
 func fatal(format string, a ...interface{}) {
 	urlError(format, a...)
@@ -114,9 +115,12 @@ func _fetch(n uint, u *url.URL, client *gemini.Client) {
 			fmt.Fprintf(os.Stderr, "Info: Redirected to %s\n", resp.Meta)
 		}
 		_fetch(n+1, u.ResolveReference(redirect), client)
-	} else if resp.Status == 10 {
+	} else if gemini.SimplifyStatus(resp.Status) == 10 {
 		urlError("This URL needs input, you should make the request again manually: %s", uStr)
 	} else if gemini.SimplifyStatus(resp.Status) == 20 {
+		if *header {
+			fmt.Printf("Header: %d %s\n", resp.Status, resp.Meta)
+		}
 		// Output to stdout, otherwise save it to a file
 		if *output == "-" {
 			io.Copy(os.Stdout, resp.Body)
@@ -125,6 +129,10 @@ func _fetch(n uint, u *url.URL, client *gemini.Client) {
 		saveFile(resp, u)
 		return
 	} else {
+		// Any sort of invalid status code will likely be caught by go-gemini, but this is here just in case
+		if *header {
+			fmt.Printf("Header: %d %s\n", resp.Status, resp.Meta)
+		}
 		urlError("URL returned status %d, skipping: %s", resp.Status, u)
 	}
 }
