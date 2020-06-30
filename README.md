@@ -1,6 +1,7 @@
 # gemget
 
 A command line downloader for the [Gemini protocol](https://gemini.circumlunar.space/).
+It works well with streams and can print headers for debugging as well.
 
 ```
 gemget [option]... URL...
@@ -29,8 +30,7 @@ If you have Go installed, you can also install it with:
 ```
 GO111MODULE=on go get -u github.com/makeworld-the-better-one/gemget
 ```
-
-If you want to install from the latest commit (not release), clone the repo and then run `go install` inside it.
+Change the last part to say `gemget@master` to install from the latest commit
 
 # Features to add
 - Support TOFU with a certificate fingerprint cache, and option to disable it
