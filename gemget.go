@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"io"
-	"net"
 	"net/url"
 	"os"
 	"path"
@@ -146,30 +145,24 @@ func main() {
 	}
 	urls := make([]*url.URL, len(flag.Args()))
 	for i, u := range flag.Args() {
+
 		parsed, err := url.Parse(u)
 		if err != nil {
 			urlError("URL could not be parsed: %s", u)
 			continue
 		}
-		if len(parsed.Scheme) != 0 && parsed.Scheme != "gemini" {
-			urlError("Not a gemini URL: %s", u)
-			continue
-		}
-		if !strings.HasPrefix(u, "gemini://") {
-			// Have to reparse due to the way the lib works
-			parsed, err = url.Parse("gemini://" + u)
+
+		// Add scheme to URLs for convenience, so that you can write a command like: gemget example.com
+		// instead of: gemget gemini://example.com
+		if !strings.HasPrefix(u, "//") && !strings.Contains(u, "://") {
+			u = "//" + u
+			parsed, err = url.Parse(u)
 			if err != nil {
-				urlError("Adding gemini:// to %s failed.", u)
+				urlError("URL could not be parsed after adding scheme: %s", u)
+				continue
 			}
 		}
-		if parsed.Port() == "" {
-			// Add port, gemini library requires it
-			parsed.Host = net.JoinHostPort(parsed.Hostname(), "1965")
-		}
-		if parsed.Path == "" {
-			// Add slash to the end of domains to prevent redirects
-			parsed.Path = "/"
-		}
+
 		urls[i] = parsed
 	}
 
