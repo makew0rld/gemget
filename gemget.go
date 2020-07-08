@@ -46,12 +46,14 @@ func urlError(format string, a ...interface{}) {
 }
 
 func info(format string, a ...interface{}) {
+	if quiet {
+		return
+	}
 	format = "Info: " + strings.TrimRight(format, "\n") + "\n"
 	fmt.Fprintf(os.Stderr, format, a...)
 }
 
 func saveFile(resp *gemini.Response, u *url.URL) {
-	var name string
 	var savePath string
 
 	if *output == "" {
@@ -72,7 +74,7 @@ func saveFile(resp *gemini.Response, u *url.URL) {
 
 	f, err := os.OpenFile(savePath, os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
-		fatal("Couldn't save file %s: %v", name, err)
+		fatal("Couldn't create file %s: %v", savePath, err)
 	}
 	defer f.Close()
 
@@ -91,7 +93,13 @@ func saveFile(resp *gemini.Response, u *url.URL) {
 		// Try to read one byte more than the limit. If EOF is returned, then the response
 		// was at the limit or below. Otherwise it was too large.
 		written, err = io.CopyN(writer, resp.Body, maxBytes+1)
-		fmt.Println()
+		if !quiet {
+			fmt.Println()
+		}
+		if err == io.EOF {
+			info("Saved %s from URL %s", savePath, u.String())
+			return
+		}
 		if err == nil {
 			err = os.Remove(savePath)
 			if err != nil {
@@ -99,14 +107,19 @@ func saveFile(resp *gemini.Response, u *url.URL) {
 			}
 			info("File is larger than max size limit, deleted: %s", u.String())
 		} else if err != io.EOF {
-			fatal("Issue saving file %s, %d bytes saved: %v", name, written, err)
+			fatal("Issue saving file %s, %d bytes saved: %v", savePath, written, err)
 		}
 	} else {
 		// No size limit
 		written, err = io.Copy(writer, resp.Body)
-		fmt.Println()
+		if !quiet {
+			fmt.Println()
+		}
 		if err != nil {
-			fatal("Issue saving file %s, %d bytes saved: %v", name, written, err)
+			fatal("Issue saving file %s, %d bytes saved: %v", savePath, written, err)
+		} else {
+			info("Saved %s from URL %s", savePath, u.String())
+			return
 		}
 	}
 }
@@ -146,9 +159,7 @@ func fetch(n uint, u *url.URL, client *gemini.Client) {
 			urlError("Redirect URL %s couldn't be parsed.", resp.Meta)
 			return
 		}
-		if !quiet {
-			info("Redirected to %s", resp.Meta)
-		}
+		info("Redirected to %s", resp.Meta)
 		fetch(n+1, u.ResolveReference(redirect), client)
 	} else if gemini.SimplifyStatus(resp.Status) == 10 {
 		urlError("This URL needs input, you should make the request again manually: %s", uStr)
@@ -223,9 +234,7 @@ func main() {
 	// Fetch each URL
 	client := &gemini.Client{Insecure: *insecure}
 	for _, u := range urls {
-		if !quiet {
-			info("Started %s", u)
-		}
+		info("Started %s", u)
 		fetch(0, u, client)
 	}
 }
