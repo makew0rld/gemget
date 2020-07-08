@@ -58,11 +58,19 @@ func info(format string, a ...interface{}) {
 func handleIOErr(err error, resp *gemini.Response, written int64, path, u string) {
 	if *maxSecs > 0 && strings.HasSuffix(err.Error(), "use of closed network connection") {
 		// Download timed out intentionally, due to a user flag
-		err = os.Remove(path)
-		if err != nil {
-			fatal("Tried to remove %s (from URL %s) because the download timed out, but encountered this error: %v", path, u, err)
+
+		if path != "" && path != "-" {
+			// A real file path is being downloaded to
+
+			err = os.Remove(path)
+			if err != nil {
+				fatal("Tried to remove %s (from URL %s) because the download timed out, but encountered this error: %v", path, u, err)
+			}
+			info("Download timed out, deleted: %s", u)
+		} else {
+			// Download is going to stdout
+			info("Download timed out: %s", u)
 		}
-		info("Download timed out, deleted: %s", u)
 		return
 	}
 	resp.Body.Close()
@@ -198,7 +206,10 @@ func fetch(n uint, u *url.URL, client *gemini.Client) {
 
 		// Output to stdout, otherwise save it to a file
 		if *output == "-" {
-			io.Copy(os.Stdout, resp.Body)
+			written, err := io.Copy(os.Stdout, resp.Body)
+			if err != nil {
+				handleIOErr(err, resp, written, "", u.String())
+			}
 			return
 		}
 		saveFile(resp, u)
