@@ -14,9 +14,6 @@ import (
 	flag "github.com/spf13/pflag"
 )
 
-//var cert = flag.String("cert", "", "Not implemented.")
-//var key = flag.String("key", "", "Not implemented.")
-
 var insecure = flag.BoolP("insecure", "i", false, "Skip checking the cert")
 var dir = flag.StringP("directory", "d", ".", "The directory where downloads go")
 var output = flag.StringP("output", "o", "", "Output path, for when there is only one URL.\n'-' means stdout and implies --quiet.\nIt overrides --directory.")
@@ -82,7 +79,9 @@ func saveFile(resp *gemini.Response, u *url.URL) {
 	}
 }
 
-func _fetch(n uint, u *url.URL, client *gemini.Client) {
+// fetch fetches the URL.
+// n is how many redirects have happened. Set to 0 for the first request.
+func fetch(n uint, u *url.URL, client *gemini.Client) {
 	uStr := u.String()
 	resp, err := client.Fetch(uStr)
 	if err != nil {
@@ -105,7 +104,7 @@ func _fetch(n uint, u *url.URL, client *gemini.Client) {
 			return
 		}
 		// Redirect
-		if n == *numRedirs {
+		if n >= *numRedirs {
 			urlError("URL redirected too many times: %s", uStr)
 			return
 		}
@@ -118,7 +117,7 @@ func _fetch(n uint, u *url.URL, client *gemini.Client) {
 		if !quiet {
 			fmt.Fprintf(os.Stderr, "Info: Redirected to %s\n", resp.Meta)
 		}
-		_fetch(n+1, u.ResolveReference(redirect), client)
+		fetch(n+1, u.ResolveReference(redirect), client)
 	} else if gemini.SimplifyStatus(resp.Status) == 10 {
 		urlError("This URL needs input, you should make the request again manually: %s", uStr)
 	} else if gemini.SimplifyStatus(resp.Status) == 20 {
@@ -133,10 +132,6 @@ func _fetch(n uint, u *url.URL, client *gemini.Client) {
 		// Any sort of invalid status code will likely be caught by go-gemini, but this is here just in case
 		urlError("URL returned status %d, skipping: %s", resp.Status, u)
 	}
-}
-
-func fetch(u *url.URL, client *gemini.Client) {
-	_fetch(1, u, client)
 }
 
 func main() {
@@ -161,7 +156,7 @@ func main() {
 		// Add scheme to URLs for convenience, so that you can write a command like: gemget example.com
 		// instead of: gemget gemini://example.com
 		if !strings.HasPrefix(u, "//") && !strings.Contains(u, "://") {
-			u = "//" + u
+			u = "gemini://" + u
 			parsed, err = url.Parse(u)
 			if err != nil {
 				urlError("URL could not be parsed after adding scheme: %s", u)
@@ -185,6 +180,6 @@ func main() {
 		if !quiet {
 			fmt.Fprintf(os.Stderr, "Info: Started %s\n", u)
 		}
-		fetch(u, client)
+		fetch(0, u, client)
 	}
 }
