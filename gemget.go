@@ -3,11 +3,14 @@ package main
 import (
 	"fmt"
 	"io"
+	"math"
 	"net/url"
 	"os"
 	"path"
 	"path/filepath"
 	"strings"
+
+	"github.com/dustin/go-humanize"
 
 	"github.com/makeworld-the-better-one/go-gemini"
 	"github.com/schollz/progressbar/v3"
@@ -16,15 +19,18 @@ import (
 
 var version = "1.3.0-unreleased"
 
-var insecure = flag.BoolP("insecure", "i", false, "Skip checking the cert")
+var insecure = flag.BoolP("insecure", "i", false, "Skip checking the cert\n")
 var dir = flag.StringP("directory", "d", ".", "The directory where downloads go")
-var output = flag.StringP("output", "o", "", "Output path, for when there is only one URL.\n'-' means stdout and implies --quiet.\nIt overrides --directory.")
+var output = flag.StringP("output", "o", "", "Output path, for when there is only one URL.\n'-' means stdout and implies --quiet.\nIt overrides --directory.\n")
 var errorSkip = flag.BoolP("skip", "s", false, "Move to the next URL when one fails.")
-var exts = flag.BoolP("add-extension", "e", false, "Add .gmi extensions to gemini files that don't have it, like directories.")
+var exts = flag.BoolP("add-extension", "e", false, "Add .gmi extensions to gemini files that don't have it, like directories.\n")
 var quiet bool // Set in main, so that it can be changed later if needed
 var numRedirs = flag.UintP("redirects", "r", 5, "How many redirects to follow before erroring out.")
-var header = flag.Bool("header", false, "Print out (even with --quiet) the response header to stdout in the format:\nHeader: <status> <meta>")
+var header = flag.Bool("header", false, "Print out (even with --quiet) the response header to stdout in the format:\nHeader: <status> <meta>\n")
 var verFlag = flag.BoolP("version", "v", false, "Find out what version of gemget you're running.")
+var maxSize = flag.StringP("max-size", "m", "", "Set the file size limit. Any download that exceeds this size will\ncause an Error output and be deleted.\nLeaving it blank or setting to zero bytes will result in no limit.\nThis flag is ignored when outputting to stdout.\nFormat: <num> <optional-byte-size>\nExamples: 423, 32 KiB, 20 MB, 22 MiB, 10 gib, 3M\n")
+
+var maxBytes int64 // After maxSize is parsed this is set
 
 func fatal(format string, a ...interface{}) {
 	urlError(format, a...)
@@ -32,15 +38,16 @@ func fatal(format string, a ...interface{}) {
 }
 
 func urlError(format string, a ...interface{}) {
-	if strings.HasPrefix(format, "\n") {
-		format = "Error: " + format[:len(format)-1] + "\n"
-	} else {
-		format = "Error: " + format + "\n"
-	}
+	format = "Error: " + strings.TrimRight(format, "\n") + "\n"
 	fmt.Fprintf(os.Stderr, format, a...)
 	if !*errorSkip {
 		os.Exit(1)
 	}
+}
+
+func info(format string, a ...interface{}) {
+	format = "Info: " + strings.TrimRight(format, "\n") + "\n"
+	fmt.Fprintf(os.Stderr, format, a...)
 }
 
 func saveFile(resp *gemini.Response, u *url.URL) {
@@ -69,16 +76,38 @@ func saveFile(resp *gemini.Response, u *url.URL) {
 	}
 	defer f.Close()
 
-	var written int64
-	if quiet || *output == "-" { // Don't mess up stdout with progress bar
-		written, err = io.Copy(f, resp.Body)
+	var writer io.Writer
+
+	if quiet {
+		writer = f // Just write to file only
 	} else {
 		bar := progressbar.DefaultBytes(-1, "downloading")
-		written, err = io.Copy(io.MultiWriter(f, bar), resp.Body)
-		fmt.Println()
+		writer = io.MultiWriter(f, bar) // Use progress bar as well
 	}
-	if err != nil {
-		fatal("Issue saving file %s, %d bytes saved: %v", name, written, err)
+
+	var written int64
+
+	if maxBytes > 0 {
+		// Try to read one byte more than the limit. If EOF is returned, then the response
+		// was at the limit or below. Otherwise it was too large.
+		written, err = io.CopyN(writer, resp.Body, maxBytes+1)
+		fmt.Println()
+		if err == nil {
+			err = os.Remove(savePath)
+			if err != nil {
+				fatal("Tried to remove %s (from URL %s) because it was larger than the max size limit, but encountered this error: %v", savePath, u.String(), err)
+			}
+			info("File is larger than max size limit, deleted: %s", u.String())
+		} else if err != io.EOF {
+			fatal("Issue saving file %s, %d bytes saved: %v", name, written, err)
+		}
+	} else {
+		// No size limit
+		written, err = io.Copy(writer, resp.Body)
+		fmt.Println()
+		if err != nil {
+			fatal("Issue saving file %s, %d bytes saved: %v", name, written, err)
+		}
 	}
 }
 
@@ -118,7 +147,7 @@ func fetch(n uint, u *url.URL, client *gemini.Client) {
 			return
 		}
 		if !quiet {
-			fmt.Fprintf(os.Stderr, "Info: Redirected to %s\n", resp.Meta)
+			info("Redirected to %s", resp.Meta)
 		}
 		fetch(n+1, u.ResolveReference(redirect), client)
 	} else if gemini.SimplifyStatus(resp.Status) == 10 {
@@ -138,7 +167,7 @@ func fetch(n uint, u *url.URL, client *gemini.Client) {
 }
 
 func main() {
-	flag.BoolVarP(&quiet, "quiet", "q", false, "No info strings will be printed. Note that normally infos are printed to stderr, not stdout.")
+	flag.BoolVarP(&quiet, "quiet", "q", false, "No info strings will be printed. Note that normally infos are\nprinted to stderr, not stdout.")
 	flag.Parse()
 
 	if *verFlag {
@@ -179,11 +208,23 @@ func main() {
 	if len(flag.Args()) > 1 && *output != "" && *output != "-" {
 		fatal("The output flag cannot be specified when there are multiple URLs, unless it is '-', meaning stdout.")
 	}
+
+	if *maxSize != "" {
+		tmpMaxBytes, err := humanize.ParseBytes(*maxSize)
+		if err != nil {
+			fatal("Max bytes string could not be parsed: %v", err)
+		}
+		if tmpMaxBytes > math.MaxInt64-1 {
+			fatal("Max bytes is too large: %s = %d bytes", *maxSize, tmpMaxBytes)
+		}
+		maxBytes = int64(tmpMaxBytes)
+	}
+
 	// Fetch each URL
 	client := &gemini.Client{Insecure: *insecure}
 	for _, u := range urls {
 		if !quiet {
-			fmt.Fprintf(os.Stderr, "Info: Started %s\n", u)
+			info("Started %s", u)
 		}
 		fetch(0, u, client)
 	}
