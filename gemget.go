@@ -14,6 +14,8 @@ import (
 	flag "github.com/spf13/pflag"
 )
 
+var version = "1.3.0-unreleased"
+
 var insecure = flag.BoolP("insecure", "i", false, "Skip checking the cert")
 var dir = flag.StringP("directory", "d", ".", "The directory where downloads go")
 var output = flag.StringP("output", "o", "", "Output path, for when there is only one URL.\n'-' means stdout and implies --quiet.\nIt overrides --directory.")
@@ -22,6 +24,7 @@ var exts = flag.BoolP("add-extension", "e", false, "Add .gmi extensions to gemin
 var quiet bool // Set in main, so that it can be changed later if needed
 var numRedirs = flag.UintP("redirects", "r", 5, "How many redirects to follow before erroring out.")
 var header = flag.Bool("header", false, "Print out (even with --quiet) the response header to stdout in the format:\nHeader: <status> <meta>")
+var verFlag = flag.BoolP("version", "v", false, "Find out what version of gemget you're running.")
 
 func fatal(format string, a ...interface{}) {
 	urlError(format, a...)
@@ -137,6 +140,11 @@ func fetch(n uint, u *url.URL, client *gemini.Client) {
 func main() {
 	flag.BoolVarP(&quiet, "quiet", "q", false, "No info strings will be printed. Note that normally infos are printed to stderr, not stdout.")
 	flag.Parse()
+
+	if *verFlag {
+		fmt.Println("gemget " + version)
+		return
+	}
 
 	// Validate urls
 	if len(flag.Args()) == 0 {
