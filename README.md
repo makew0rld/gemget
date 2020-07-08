@@ -23,7 +23,7 @@ Usage of gemget:
                             Leaving it blank or setting to zero bytes will result in no limit.
                             This flag is ignored when outputting to stdout.
                             Format: <num> <optional-byte-size>
-                            Examples: 423, 32 KiB, 20 MB, 22 MiB, 10 gib, 3M
+                            Examples: 423, 3.2KiB, '2.5 MB', '22 MiB', '10gib', 3M
                             
   -t, --max-time uint       Set the downloading time limit, in seconds. Any download that
                             takes longer will cause an Info output and be deleted.
@@ -55,7 +55,6 @@ Change the last part to say `gemget@master` to install from the latest commit.
 - Support TOFU with a certificate fingerprint cache, and option to disable it
 - Support client certificates
 - Support interactive input for status code 10 & 11
-- Read URLs from file
 
 ## License
 This project is under the [MIT License](./LICENSE).
