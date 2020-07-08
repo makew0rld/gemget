@@ -74,6 +74,7 @@ func saveFile(resp *gemini.Response, u *url.URL) {
 
 	f, err := os.OpenFile(savePath, os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
+		resp.Body.Close()
 		fatal("Couldn't create file %s: %v", savePath, err)
 	}
 	defer f.Close()
@@ -103,10 +104,12 @@ func saveFile(resp *gemini.Response, u *url.URL) {
 		if err == nil {
 			err = os.Remove(savePath)
 			if err != nil {
+				resp.Body.Close()
 				fatal("Tried to remove %s (from URL %s) because it was larger than the max size limit, but encountered this error: %v", savePath, u.String(), err)
 			}
 			info("File is larger than max size limit, deleted: %s", u.String())
 		} else if err != io.EOF {
+			resp.Body.Close()
 			fatal("Issue saving file %s, %d bytes saved: %v", savePath, written, err)
 		}
 	} else {
@@ -116,6 +119,7 @@ func saveFile(resp *gemini.Response, u *url.URL) {
 			fmt.Println()
 		}
 		if err != nil {
+			resp.Body.Close()
 			fatal("Issue saving file %s, %d bytes saved: %v", savePath, written, err)
 		} else {
 			info("Saved %s from URL %s", savePath, u.String())
