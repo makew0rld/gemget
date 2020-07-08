@@ -67,7 +67,7 @@ func saveFile(resp *gemini.Response, u *url.URL) {
 	defer f.Close()
 
 	var written int64
-	if quiet {
+	if quiet || *output == "-" { // Don't mess up stdout with progress bar
 		written, err = io.Copy(f, resp.Body)
 	} else {
 		bar := progressbar.DefaultBytes(-1, "downloading")
@@ -170,9 +170,6 @@ func main() {
 	// Validate flags
 	if len(flag.Args()) > 1 && *output != "" && *output != "-" {
 		fatal("The output flag cannot be specified when there are multiple URLs, unless it is '-', meaning stdout.")
-	}
-	if *output == "-" {
-		quiet = true
 	}
 	// Fetch each URL
 	client := &gemini.Client{Insecure: *insecure}
