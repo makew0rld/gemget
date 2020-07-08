@@ -9,6 +9,7 @@ import (
 	"path"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/dustin/go-humanize"
 
@@ -28,7 +29,8 @@ var quiet bool // Set in main, so that it can be changed later if needed
 var numRedirs = flag.UintP("redirects", "r", 5, "How many redirects to follow before erroring out.")
 var header = flag.Bool("header", false, "Print out (even with --quiet) the response header to stdout in the format:\nHeader: <status> <meta>\n")
 var verFlag = flag.BoolP("version", "v", false, "Find out what version of gemget you're running.")
-var maxSize = flag.StringP("max-size", "m", "", "Set the file size limit. Any download that exceeds this size will\ncause an Error output and be deleted.\nLeaving it blank or setting to zero bytes will result in no limit.\nThis flag is ignored when outputting to stdout.\nFormat: <num> <optional-byte-size>\nExamples: 423, 32 KiB, 20 MB, 22 MiB, 10 gib, 3M\n")
+var maxSize = flag.StringP("max-size", "m", "", "Set the file size limit. Any download that exceeds this size will\ncause an Info output and be deleted.\nLeaving it blank or setting to zero bytes will result in no limit.\nThis flag is ignored when outputting to stdout.\nFormat: <num> <optional-byte-size>\nExamples: 423, 32 KiB, 20 MB, 22 MiB, 10 gib, 3M\n")
+var maxSecs = flag.UintP("max-time", "t", 0, "Set the downloading time limit, in seconds. Any download that\ntakes longer will cause an Info output and be deleted.\n")
 
 var maxBytes int64 // After maxSize is parsed this is set
 
@@ -51,6 +53,20 @@ func info(format string, a ...interface{}) {
 	}
 	format = "Info: " + strings.TrimRight(format, "\n") + "\n"
 	fmt.Fprintf(os.Stderr, format, a...)
+}
+
+func handleIOErr(err error, resp *gemini.Response, written int64, path, u string) {
+	if *maxSecs > 0 && strings.HasSuffix(err.Error(), "use of closed network connection") {
+		// Download timed out intentionally, due to a user flag
+		err = os.Remove(path)
+		if err != nil {
+			fatal("Tried to remove %s (from URL %s) because the download timed out, but encountered this error: %v", path, u, err)
+		}
+		info("Download timed out, deleted: %s", u)
+		return
+	}
+	resp.Body.Close()
+	fatal("Issue saving file %s, %d bytes saved: %v", path, written, err)
 }
 
 func saveFile(resp *gemini.Response, u *url.URL) {
@@ -98,6 +114,7 @@ func saveFile(resp *gemini.Response, u *url.URL) {
 			fmt.Println()
 		}
 		if err == io.EOF {
+			resp.Body.Close()
 			info("Saved %s from URL %s", savePath, u.String())
 			return
 		}
@@ -107,10 +124,13 @@ func saveFile(resp *gemini.Response, u *url.URL) {
 				resp.Body.Close()
 				fatal("Tried to remove %s (from URL %s) because it was larger than the max size limit, but encountered this error: %v", savePath, u.String(), err)
 			}
-			info("File is larger than max size limit, deleted: %s", u.String())
-		} else if err != io.EOF {
 			resp.Body.Close()
-			fatal("Issue saving file %s, %d bytes saved: %v", savePath, written, err)
+			info("File is larger than max size limit, deleted: %s", u.String())
+			return
+		} else if err != io.EOF {
+			// Some other error
+			handleIOErr(err, resp, written, savePath, u.String())
+			return
 		}
 	} else {
 		// No size limit
@@ -119,11 +139,10 @@ func saveFile(resp *gemini.Response, u *url.URL) {
 			fmt.Println()
 		}
 		if err != nil {
-			resp.Body.Close()
-			fatal("Issue saving file %s, %d bytes saved: %v", savePath, written, err)
+			handleIOErr(err, resp, written, savePath, u.String())
 		} else {
+			resp.Body.Close()
 			info("Saved %s from URL %s", savePath, u.String())
-			return
 		}
 	}
 }
@@ -168,6 +187,15 @@ func fetch(n uint, u *url.URL, client *gemini.Client) {
 	} else if gemini.SimplifyStatus(resp.Status) == 10 {
 		urlError("This URL needs input, you should make the request again manually: %s", uStr)
 	} else if gemini.SimplifyStatus(resp.Status) == 20 {
+
+		if *maxSecs > 0 {
+			// Goroutine that closes response after timeout
+			go func(r *gemini.Response) {
+				time.Sleep(time.Duration(*maxSecs) * time.Second)
+				r.Body.Close()
+			}(resp)
+		}
+
 		// Output to stdout, otherwise save it to a file
 		if *output == "-" {
 			io.Copy(os.Stdout, resp.Body)

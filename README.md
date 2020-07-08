@@ -16,10 +16,14 @@ Usage of gemget:
   -i, --insecure           Skip checking the cert
                            
   -m, --max-size string    Set the file size limit. Any download that exceeds this size will
-                           cause an Error output and be deleted.
+                           cause an Info output and be deleted.
                            Leaving it blank or setting to zero bytes will result in no limit.
+                           This flag is ignored when outputting to stdout.
                            Format: <num> <optional-byte-size>
                            Examples: 423, 32 KiB, 20 MB, 22 MiB, 10 gib, 3M
+                           
+  -t, --max-time uint      Set the downloading time limit, in seconds. Any download that
+                           takes longer will cause an Info output and be deleted.
                            
   -o, --output string      Output path, for when there is only one URL.
                            '-' means stdout and implies --quiet.
@@ -42,7 +46,7 @@ If you have Go installed, you can also install it with:
 ```
 GO111MODULE=on go get -u github.com/makeworld-the-better-one/gemget
 ```
-Change the last part to say `gemget@master` to install from the latest commit
+Change the last part to say `gemget@master` to install from the latest commit.
 
 # Features to add
 - Support TOFU with a certificate fingerprint cache, and option to disable it
