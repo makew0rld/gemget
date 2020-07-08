@@ -86,6 +86,7 @@ func saveFile(resp *gemini.Response, u *url.URL) {
 			return
 		}
 		if err == nil {
+			f.Close()
 			err = os.Remove(savePath)
 			if err != nil {
 				resp.Body.Close()
@@ -96,6 +97,7 @@ func saveFile(resp *gemini.Response, u *url.URL) {
 			return
 		} else if err != io.EOF {
 			// Some other error
+			f.Close()
 			handleIOErr(err, resp, written, savePath, u.String())
 			return
 		}
@@ -106,6 +108,7 @@ func saveFile(resp *gemini.Response, u *url.URL) {
 			fmt.Println()
 		}
 		if err != nil {
+			f.Close()
 			handleIOErr(err, resp, written, savePath, u.String())
 		} else {
 			resp.Body.Close()
@@ -130,10 +133,11 @@ func fetch(n uint, u *url.URL, client *gemini.Client) {
 	}
 
 	// Validate status
-	if resp.Status >= 60 {
+	switch gemini.SimplifyStatus(resp.Status) {
+	case 60:
 		urlError("%s needs a certificate, which is not implemented yet.", uStr)
 		return
-	} else if gemini.SimplifyStatus(resp.Status) == 30 {
+	case 30:
 		if *numRedirs == 0 {
 			urlError("This URL redirects but redirects are disabled: %s", uStr)
 			return
@@ -151,10 +155,9 @@ func fetch(n uint, u *url.URL, client *gemini.Client) {
 		}
 		info("Redirected to %s", resp.Meta)
 		fetch(n+1, u.ResolveReference(redirect), client)
-	} else if gemini.SimplifyStatus(resp.Status) == 10 {
+	case 10:
 		urlError("This URL needs input, you should make the request again manually: %s", uStr)
-	} else if gemini.SimplifyStatus(resp.Status) == 20 {
-
+	case 20:
 		if *maxSecs > 0 {
 			// Goroutine that closes response after timeout
 			go func(r *gemini.Response) {
@@ -173,7 +176,7 @@ func fetch(n uint, u *url.URL, client *gemini.Client) {
 		}
 		saveFile(resp, u)
 		return
-	} else {
+	default:
 		// Any sort of invalid status code will likely be caught by go-gemini, but this is here just in case
 		urlError("URL returned status %d, skipping: %s", resp.Status, u)
 	}
