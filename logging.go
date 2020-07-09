@@ -14,6 +14,9 @@ func fatal(format string, a ...interface{}) {
 func urlError(format string, a ...interface{}) {
 	format = "Error: " + strings.TrimRight(format, "\n") + "\n"
 	fmt.Fprintf(os.Stderr, format, a...)
+	if inputFile != nil {
+		inputFile.Close()
+	}
 	if !*errorSkip {
 		os.Exit(1)
 	}

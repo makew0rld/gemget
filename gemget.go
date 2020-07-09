@@ -24,9 +24,10 @@ var header = flag.Bool("header", false, "Print out (even with --quiet) the respo
 var verFlag = flag.BoolP("version", "v", false, "Find out what version of gemget you're running.")
 var maxSize = flag.StringP("max-size", "m", "", "Set the file size limit. Any download that exceeds this size will\ncause an Info output and be deleted.\nLeaving it blank or setting to zero bytes will result in no limit.\nThis flag is ignored when outputting to stdout.\nFormat: <num> <optional-byte-size>\nExamples: 423, 3.2KiB, '2.5 MB', '22 MiB', '10gib', 3M\n")
 var maxSecs = flag.UintP("max-time", "t", 0, "Set the downloading time limit, in seconds. Any download that\ntakes longer will cause an Info output and be deleted.\n")
-var inputFile = flag.StringP("input-file", "f", "", "Input file with a single URL on each line. Empty lines or lines starting\nwith # are ignored. URLs on the command line will be processed first.\n")
+var inputFilePath = flag.StringP("input-file", "f", "", "Input file with a single URL on each line. Empty lines or lines starting\nwith # are ignored. URLs on the command line will be processed first.\n")
 
-var maxBytes int64 // After maxSize is parsed this is set
+var maxBytes int64     // After maxSize is parsed this is set
+var inputFile *os.File // Global var so it can be closed on fatal errors
 
 func main() {
 	flag.BoolVarP(&quiet, "quiet", "q", false, "No info strings will be printed. Note that normally infos are\nprinted to stderr, not stdout.")
@@ -38,13 +39,13 @@ func main() {
 	}
 
 	// Validate urls
-	if len(flag.Args()) == 0 && *inputFile == "" {
+	if len(flag.Args()) == 0 && *inputFilePath == "" {
 		flag.Usage()
 		fmt.Println("\nNo URLs provided, by command line or file.")
 		os.Exit(1)
 	}
 	// Validate flags
-	if (len(flag.Args()) > 1 || *inputFile != "") && *output != "" && *output != "-" {
+	if (len(flag.Args()) > 1 || *inputFilePath != "") && *output != "" && *output != "-" {
 		fatal("The output flag cannot be specified when there are multiple URLs, unless it is '-', meaning stdout.")
 	}
 	if *maxSize != "" {
@@ -58,15 +59,15 @@ func main() {
 		maxBytes = int64(tmpMaxBytes)
 	}
 	// Validate input file
-	if *inputFile != "" {
-		fi, err := os.Stat(*inputFile)
+	if *inputFilePath != "" {
+		fi, err := os.Stat(*inputFilePath)
 		if err == nil {
 			if fi.IsDir() {
-				fatal("Input file path points to a directory: %s", *inputFile)
+				fatal("Input file path points to a directory: %s", *inputFilePath)
 			}
 		} else {
 			if os.IsNotExist(err) {
-				fatal("Input file does not exist: %s", *inputFile)
+				fatal("Input file does not exist: %s", *inputFilePath)
 			} else {
 				// Some other error - permissions for example
 				fatal("Couldn't access input file: %v", err)
@@ -77,15 +78,16 @@ func main() {
 	client := &gemini.Client{Insecure: *insecure}
 	var urls *scanner.Scanner
 
-	if *inputFile == "" {
+	if *inputFilePath == "" {
 		urls = scanner.NewScanner(nil, flag.Args()...)
 	} else {
-		f, err := os.Open(*inputFile)
+		var err error
+		inputFile, err = os.Open(*inputFilePath)
 		if err != nil {
 			fatal("Issue opening input file: %v", err)
 		}
-		defer f.Close()
-		urls = scanner.NewScanner(f, flag.Args()...)
+		defer inputFile.Close()
+		urls = scanner.NewScanner(inputFile, flag.Args()...)
 	}
 
 	// Fetch each URL
