@@ -58,6 +58,24 @@ func main() {
 		}
 		maxBytes = int64(tmpMaxBytes)
 	}
+	// Validate output directory
+	if *dir == "" {
+		fatal("Directory path cannot be empty.")
+	} else if *dir != "." {
+		// Not the default, verify it's a real directory
+		di, err := os.Stat(*dir)
+		if err == nil {
+			if !di.IsDir() {
+				fatal("Directory path is a not a directory: %s", *dir)
+			}
+		} else if os.IsNotExist(err) {
+			fatal("Directory does not exist: %s", *dir)
+		} else {
+			// Some other error - permissions for example
+			fatal("Couldn't access directory %s: %v", *dir, err)
+		}
+	}
+
 	// Validate input file
 	if *inputFilePath != "" {
 		fi, err := os.Stat(*inputFilePath)
@@ -65,13 +83,11 @@ func main() {
 			if fi.IsDir() {
 				fatal("Input file path points to a directory: %s", *inputFilePath)
 			}
+		} else if os.IsNotExist(err) {
+			fatal("Input file does not exist: %s", *inputFilePath)
 		} else {
-			if os.IsNotExist(err) {
-				fatal("Input file does not exist: %s", *inputFilePath)
-			} else {
-				// Some other error - permissions for example
-				fatal("Couldn't access input file: %v", err)
-			}
+			// Some other error - permissions for example
+			fatal("Couldn't access input file %s: %v", *inputFilePath, err)
 		}
 	}
 
