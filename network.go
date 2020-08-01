@@ -64,7 +64,7 @@ func saveFile(resp *gemini.Response, u *url.URL) {
 
 	var writer io.Writer
 
-	if quiet {
+	if quiet || *noBar {
 		writer = f // Just write to file only
 	} else {
 		bar := progressbar.DefaultBytes(-1, "downloading")
@@ -77,7 +77,7 @@ func saveFile(resp *gemini.Response, u *url.URL) {
 		// Try to read one byte more than the limit. If EOF is returned, then the response
 		// was at the limit or below. Otherwise it was too large.
 		written, err = io.CopyN(writer, resp.Body, maxBytes+1)
-		if !quiet {
+		if !quiet && !*noBar {
 			fmt.Println()
 		}
 		if err == io.EOF {
@@ -104,7 +104,7 @@ func saveFile(resp *gemini.Response, u *url.URL) {
 	} else {
 		// No size limit
 		written, err = io.Copy(writer, resp.Body)
-		if !quiet {
+		if !quiet && !*noBar {
 			fmt.Println()
 		}
 		if err != nil {
