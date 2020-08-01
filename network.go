@@ -45,7 +45,7 @@ func saveFile(resp *gemini.Response, u *url.URL) {
 			// Domain is being downloaded, so there's no path/file
 			name = u.Hostname()
 		}
-		if *exts && !(strings.HasSuffix(name, ".gmi") && strings.HasSuffix(name, ".gemini")) && (resp.Meta == "" || strings.HasPrefix(resp.Meta, "text/gemini")) {
+		if *exts && !(strings.HasSuffix(name, ".gmi") || strings.HasSuffix(name, ".gemini")) && (resp.Meta == "" || strings.HasPrefix(resp.Meta, "text/gemini")) {
 			// It's a gemini file, but it doesn't have that extension - and the user wants them added
 			name += ".gmi"
 		}
