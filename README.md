@@ -28,10 +28,13 @@ Usage of gemget:
   -t, --max-time uint       Set the downloading time limit, in seconds. Any download that
                             takes longer will cause an Info output and be deleted.
                             
-  -p, --no-progress-bar     Disable the progress bar output.
+      --no-progress-bar     Disable the progress bar output.
   -o, --output string       Output path, for when there is only one URL.
                             '-' means stdout and implies --quiet.
                             It overrides --directory.
+                            
+  -p, --proxy string        A proxy that can requests are sent to instead.
+                            Can be a domain or IP with port. Port 1965 is assumed otherwise.
                             
   -q, --quiet               Neither info strings or the progress bar will be printed.
                             Note that normally infos are printed to stderr, not stdout.
@@ -39,6 +42,7 @@ Usage of gemget:
   -r, --redirects uint      How many redirects to follow before erroring out. (default 5)
   -s, --skip                Move to the next URL when one fails.
   -v, --version             Find out what version of gemget you're running.
+
 ```
 
 # Installation

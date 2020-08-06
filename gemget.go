@@ -24,7 +24,8 @@ var verFlag = flag.BoolP("version", "v", false, "Find out what version of gemget
 var maxSize = flag.StringP("max-size", "m", "", "Set the file size limit. Any download that exceeds this size will\ncause an Info output and be deleted.\nLeaving it blank or setting to zero bytes will result in no limit.\nThis flag is ignored when outputting to stdout.\nFormat: <num> <optional-byte-size>\nExamples: 423, 3.2KiB, '2.5 MB', '22 MiB', '10gib', 3M\n")
 var maxSecs = flag.UintP("max-time", "t", 0, "Set the downloading time limit, in seconds. Any download that\ntakes longer will cause an Info output and be deleted.\n")
 var inputFilePath = flag.StringP("input-file", "f", "", "Input file with a single URL on each line. Empty lines or lines starting\nwith # are ignored. URLs on the command line will be processed first.\n")
-var noBar = flag.BoolP("no-progress-bar", "p", false, "Disable the progress bar output.")
+var noBar = flag.Bool("no-progress-bar", false, "Disable the progress bar output.")
+var proxy = flag.StringP("proxy", "p", "", "A proxy that can requests are sent to instead.\nCan be a domain or IP with port. Port 1965 is assumed otherwise.\n")
 var quiet bool // Set in main, so that it can be changed later if needed
 
 var maxBytes int64     // After maxSize is parsed this is set

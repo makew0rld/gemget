@@ -121,7 +121,13 @@ func saveFile(resp *gemini.Response, u *url.URL) {
 // n is how many redirects have happened. Set to 0 for the first request.
 func fetch(n uint, u *url.URL, client *gemini.Client) {
 	uStr := u.String()
-	resp, err := client.Fetch(uStr)
+	var resp *gemini.Response
+	var err error
+	if *proxy != "" {
+		resp, err = client.FetchWithHost(*proxy, uStr)
+	} else {
+		resp, err = client.Fetch(uStr)
+	}
 	if err != nil {
 		urlError(err.Error())
 		return
