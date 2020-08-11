@@ -6,10 +6,8 @@ github.com/dustin/go-humanize v1.0.0/go.mod h1:HtrtbFcZ19U5GC7JDqmcUSB87Iq5E25Kn
 github.com/google/go-cmp v0.3.1 h1:Xye71clBPdm5HgqGwUkwhbynsUJZhDbS20FvLhQ2izg=
 github.com/google/go-cmp v0.3.1/go.mod h1:8QqcDgzrUqlUb/G2PQTWiueGozuR1884gddMywk6iLU=
 github.com/k0kubun/go-ansi v0.0.0-20180517002512-3bf9e2903213/go.mod h1:vNUNkEQ1e29fT/6vq2aBdFsgNPmy8qMdSay1npru+Sw=
-github.com/makeworld-the-better-one/go-gemini v0.7.1-0.20200806230543-8a3ff493409a h1:Zd4pjIf9XXxPXpdIfebCFRtxhE+LyGUhT8r6HwU2Db4=
-github.com/makeworld-the-better-one/go-gemini v0.7.1-0.20200806230543-8a3ff493409a/go.mod h1:P7/FbZ+IEIbA/d+A0Y3w2GNgD8SA2AcNv7aDGJbaWG4=
-github.com/makeworld-the-better-one/go-gemini v0.8.0 h1:O0I2HghYKQODRi+BcJ/9LDkzs9w3IXxYtFtGGpSNzQQ=
-github.com/makeworld-the-better-one/go-gemini v0.8.0/go.mod h1:P7/FbZ+IEIbA/d+A0Y3w2GNgD8SA2AcNv7aDGJbaWG4=
+github.com/makeworld-the-better-one/go-gemini v0.8.1 h1:Bb3peZ9Vwgc6EXZv9k+WpHDb2IOWDWqYsq3CTaAgZMU=
+github.com/makeworld-the-better-one/go-gemini v0.8.1/go.mod h1:P7/FbZ+IEIbA/d+A0Y3w2GNgD8SA2AcNv7aDGJbaWG4=
 github.com/mattn/go-isatty v0.0.12/go.mod h1:cbi8OIDigv2wuxKPP5vlRcQ1OAZbq2CE4Kysco4FUpU=
 github.com/mattn/go-runewidth v0.0.9 h1:Lm995f3rfxdpd6TSmuVCHVb/QhupuXlYr8sCI/QdE+0=
 github.com/mattn/go-runewidth v0.0.9/go.mod h1:H031xJmbD/WCDINGzjvQ9THkh0rPKHF+m2gUSrubnMI=
