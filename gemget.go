@@ -11,7 +11,7 @@ import (
 	flag "github.com/spf13/pflag"
 )
 
-var version = "1.5.0-unreleased"
+var version = "1.5.0"
 
 var insecure = flag.BoolP("insecure", "i", false, "Skip checking the cert\n")
 var dir = flag.StringP("directory", "d", ".", "The directory where downloads go")

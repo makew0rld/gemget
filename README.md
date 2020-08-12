@@ -42,7 +42,6 @@ Usage of gemget:
   -r, --redirects uint      How many redirects to follow before erroring out. (default 5)
   -s, --skip                Move to the next URL when one fails.
   -v, --version             Find out what version of gemget you're running.
-
 ```
 
 # Installation
