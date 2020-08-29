@@ -52,7 +52,7 @@ Or install a binary of the most recent release from the [releases page](https://
 
 If you have Go installed, you can also install it with:
 ```
-GO111MODULE=on go get -u github.com/makeworld-the-better-one/gemget
+GO111MODULE=on go get github.com/makeworld-the-better-one/gemget
 ```
 Change the last part to say `gemget@master` to install from the latest commit.
 
