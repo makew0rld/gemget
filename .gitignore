@@ -1,5 +1,6 @@
 # Binaries
 build
+dist
 gemget
 gemget-*
 
