@@ -16,7 +16,7 @@ INSTALL := install -o root -g root
 INSTALL_DIR := /usr/local/bin
 DESKTOP_DIR := /usr/share/applications
 
-.PHONY: all build install desktop clean uninstall fmt
+.PHONY: all build install clean uninstall fmt
 
 all: build
 
@@ -31,24 +31,16 @@ endif
 	@go env -w GO111MODULE=on CGO_ENABLED=0 ; go build -ldflags="-s -w -X main.version=$(VERSION) -X main.commit=$(COMMIT) -X main.builtBy=Makefile"
 
 install:
-	@echo "Installing Amfora to $(INSTALL_DIR)"
-	@$(INSTALL) -m 755 amfora $(INSTALL_DIR)
-
-desktop:
-	@echo "Setting up desktop file"
-	@$(INSTALL) -m 644 amfora.desktop $(DESKTOP_DIR)
-	@update-desktop-database $(DESKTOP_DIR)
+	@echo "Installing gemget to $(INSTALL_DIR)"
+	@$(INSTALL) -m 755 gemget $(INSTALL_DIR)
 
 clean:
-	@echo "Removing Amfora binary in local directory"
-	@$(RM) amfora
+	@echo "Removing gemget binary in local directory"
+	@$(RM) gemget
 
 uninstall:
-	@echo "Removing Amfora from $(INSTALL_DIR)"
-	@$(RM) $(INSTALL_DIR)/amfora
-	@echo "Removing desktop file"
-	-@$(RM) $(DESKTOP_DIR)/amfora.desktop
-	-@update-desktop-database $(DESKTOP_DIR)
+	@echo "Removing gemget from $(INSTALL_DIR)"
+	@$(RM) $(INSTALL_DIR)/gemget
 
 fmt:
 	go fmt ./...
