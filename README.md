@@ -45,20 +45,19 @@ Usage of gemget:
 ```
 
 # Installation
-```
-curl -sf https://gobinaries.com/makeworld-the-better-one/gemget | sh
-```
-Or install a binary of the most recent release from the [releases page](https://github.com/makeworld-the-better-one/gemget/releases/).
+Install a binary of the most recent release from the [releases page](https://github.com/makeworld-the-better-one/gemget/releases/). On Unix-based systems you will have to make the file executable with `chmod +x <filename>`. You can rename the file to just `gemget` for easy access, and move it to `/usr/local/bin/`.
 
-If you have Go installed, you can also install it with:
+If you have Go installed, you can also install it using the Makefile.
+
+```shell
+git clone https://github.com/makeworld-the-better-one/gemget
+cd gemget
+# git checkout v1.2.3 # Optionally pin to a specific version instead of the latest commit
+make
+sudo make install # Not for Windows!
 ```
-go env -w GO111MODULE=on
-go get github.com/makeworld-the-better-one/gemget
-```
-Change the last part to say `gemget@master` to install from the latest commit.
 
 # Features to add
-- Support TOFU with a certificate fingerprint cache, and option to disable it
 - Support client certificates
 - Support interactive input for status code 10 & 11
 

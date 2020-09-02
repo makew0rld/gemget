@@ -1,4 +1,4 @@
-# Copied from Amfora's .goreleaser.yml
+# Modified from Amfora's .goreleaser.yml
 # https://github.com/makeworld-the-better-one/amfora/blob/master/.goreleaser.yml
 
 project_name: gemget
@@ -9,7 +9,6 @@ env:
 before:
   hooks:
     - go mod download
-    - go generate ./...
 
 builds:
   - env:
