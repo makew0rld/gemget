@@ -3,7 +3,7 @@ GIT_EXISTS := $(shell git status > /dev/null 2>&1 ; echo $$?)
 ifeq ($(GIT_EXISTS), 0)
 	ifeq ($(shell git tag --points-at HEAD),)
 		# Not currently on a tag
-		VERSION := $(shell git describe --tags | sed 's/-.*/-next/') # v1.2.3-next
+		VERSION := $(shell git describe --tags | sed 's/^v//; s/-.*/-next/') # 1.2.3-next
 	else
 		# On a tag
 		VERSION := $(shell git tag --points-at HEAD)
@@ -14,7 +14,6 @@ endif
 
 INSTALL := install -o root -g 0
 INSTALL_DIR := /usr/local/bin
-DESKTOP_DIR := /usr/share/applications
 
 .PHONY: all build install clean uninstall fmt
 
