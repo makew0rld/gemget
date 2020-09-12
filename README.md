@@ -54,7 +54,7 @@ git clone https://github.com/makeworld-the-better-one/gemget
 cd gemget
 # git checkout v1.2.3 # Optionally pin to a specific version instead of the latest commit
 make
-sudo make install # Not for Windows!
+sudo make install
 ```
 
 # Features to add
