@@ -146,11 +146,11 @@ func fetch(n uint, u *url.URL, client *gemini.Client) {
 	case 60:
 		switch resp.Status {
 		case 60:
-			urlError("%s needs a certificate. You can provide one with --cert and --key.", uStr)
+			urlError("%s needs a certificate. You can provide one with --cert and --key. META string was \"%s\".", uStr, resp.Meta)
 		case 61:
-			urlError("61 Certifcate Not Authorized: %s", uStr)
+			urlError("%s returned 61 Certificate Not Authorized, with META string \"%s\".", uStr, resp.Meta)
 		case 62:
-			urlError("62 Certificate Not Valid: %s", uStr)
+			urlError("%s returned 62 Certificate Not Valid, with META string \"%s\".", uStr, resp.Meta)
 		}
 		return
 	case 30:
@@ -166,7 +166,7 @@ func fetch(n uint, u *url.URL, client *gemini.Client) {
 		// Follow the recursion
 		redirect, err := url.Parse(resp.Meta)
 		if err != nil {
-			urlError("Redirect URL %s couldn't be parsed.", resp.Meta)
+			urlError("Redirect URL couldn't be parsed: %s", resp.Meta)
 			return
 		}
 		info("Redirected to %s", resp.Meta)
@@ -194,6 +194,6 @@ func fetch(n uint, u *url.URL, client *gemini.Client) {
 		return
 	default:
 		// Any sort of invalid status code will likely be caught by go-gemini, but this is here just in case
-		urlError("URL returned status %d, skipping: %s", resp.Status, u)
+		urlError("URL returned status %d with META string of \"%s\", skipping: %s", resp.Status, resp.Meta, u)
 	}
 }
