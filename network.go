@@ -123,8 +123,11 @@ func fetch(n uint, u *url.URL, client *gemini.Client) {
 	uStr := u.String()
 	var resp *gemini.Response
 	var err error
+
 	if *proxy != "" {
 		resp, err = client.FetchWithHost(*proxy, uStr)
+	} else if len(certPEM) > 0 {
+		resp, err = client.FetchWithCert(uStr, certPEM, keyPEM)
 	} else {
 		resp, err = client.Fetch(uStr)
 	}
@@ -141,7 +144,14 @@ func fetch(n uint, u *url.URL, client *gemini.Client) {
 	// Validate status
 	switch gemini.SimplifyStatus(resp.Status) {
 	case 60:
-		urlError("%s needs a certificate, which is not implemented yet.", uStr)
+		switch resp.Status {
+		case 60:
+			urlError("%s needs a certificate. You can provide one with --cert and --key.", uStr)
+		case 61:
+			urlError("61 Certifcate Not Authorized: %s", uStr)
+		case 62:
+			urlError("62 Certificate Not Valid: %s", uStr)
+		}
 		return
 	case 30:
 		if *numRedirs == 0 {

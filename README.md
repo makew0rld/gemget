@@ -47,7 +47,7 @@ Usage of gemget:
 # Installation
 Install a binary of the most recent release from the [releases page](https://github.com/makeworld-the-better-one/gemget/releases/). On Unix-based systems you will have to make the file executable with `chmod +x <filename>`. You can rename the file to just `gemget` for easy access, and move it to `/usr/local/bin/`.
 
-If you have Go installed, you can also install it using the Makefile.
+If you have Go installed, you can also install it using the Makefile. Make sure to use GNU Make.
 
 ```shell
 git clone https://github.com/makeworld-the-better-one/gemget
@@ -58,7 +58,7 @@ sudo make install
 ```
 
 # Features to add
-- Support client certificates
+- ~~Support client certificates~~
 - Support interactive input for status code 10 & 11
 
 ## License

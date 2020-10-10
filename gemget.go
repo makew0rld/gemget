@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"io/ioutil"
 	"math"
 	"os"
 
@@ -29,12 +30,31 @@ var (
 	inputFilePath = flag.StringP("input-file", "f", "", "Input file with a single URL on each line. Empty lines or lines starting\nwith # are ignored. URLs on the command line will be processed first.\n")
 	noBar         = flag.Bool("no-progress-bar", false, "Disable the progress bar output.")
 	proxy         = flag.StringP("proxy", "p", "", "A proxy that can requests are sent to instead.\nCan be a domain or IP with port. Port 1965 is assumed otherwise.\n")
+	cert          = flag.String("cert", "", "Path to a PEM encoded TLS client certificate to be sent with the request.\n")
+	key           = flag.String("key", "", "Path to a PEM encoded TLS key for the provided client cert.\n")
 
 	quiet bool // Set in main, so that it can be changed later if needed
 
 	maxBytes  int64    // After maxSize is parsed this is set
 	inputFile *os.File // Global var so it can be closed on fatal errors
+
+	certPEM []byte
+	keyPEM  []byte
 )
+
+func fatalIsFile(name, path string) {
+	fi, err := os.Stat(path)
+	if err == nil {
+		if fi.IsDir() {
+			fatal("%s path points to a directory: %s", name, path)
+		}
+	} else if os.IsNotExist(err) {
+		fatal("%s does not exist: %v", path, err)
+	} else {
+		// Some other error - permissions for example
+		fatal("Couldn't access %s at %s: %v", name, path, err)
+	}
+}
 
 func main() {
 	flag.BoolVarP(&quiet, "quiet", "q", false, "Neither info strings or the progress bar will be printed.\nNote that normally infos are printed to stderr, not stdout.\n")
@@ -53,6 +73,7 @@ func main() {
 		fmt.Println("\nNo URLs provided, by command line or file.")
 		os.Exit(1)
 	}
+
 	// Validate flags
 	if (len(flag.Args()) > 1 || *inputFilePath != "") && *output != "" && *output != "-" {
 		fatal("The output flag cannot be specified when there are multiple URLs, unless it is '-', meaning stdout.")
@@ -67,6 +88,26 @@ func main() {
 		}
 		maxBytes = int64(tmpMaxBytes)
 	}
+	if (*cert == "" && *key != "") || (*cert != "" && *key == "") {
+		fatal("Both --cert and --key must be defined for a client certificate to be sent.")
+	}
+
+	// Validate cert and key files
+	if *cert != "" && *key != "" {
+		fatalIsFile("cert file", *cert)
+		fatalIsFile("key file", *key)
+
+		var err error
+		certPEM, err = ioutil.ReadFile(*cert)
+		if err != nil {
+			fatal("Cert file could not be read: %v", err)
+		}
+		keyPEM, err = ioutil.ReadFile(*key)
+		if err != nil {
+			fatal("Key file could not be read: %v", err)
+		}
+	}
+
 	// Validate output directory
 	if *dir == "" {
 		fatal("Directory path cannot be empty.")
@@ -87,17 +128,7 @@ func main() {
 
 	// Validate input file
 	if *inputFilePath != "" {
-		fi, err := os.Stat(*inputFilePath)
-		if err == nil {
-			if fi.IsDir() {
-				fatal("Input file path points to a directory: %s", *inputFilePath)
-			}
-		} else if os.IsNotExist(err) {
-			fatal("Input file does not exist: %s", *inputFilePath)
-		} else {
-			// Some other error - permissions for example
-			fatal("Couldn't access input file %s: %v", *inputFilePath, err)
-		}
+		fatalIsFile("input file", *inputFilePath)
 	}
 
 	client := &gemini.Client{Insecure: *insecure}
