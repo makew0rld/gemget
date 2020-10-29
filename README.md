@@ -57,6 +57,15 @@ make
 sudo make install
 ```
 
+## Arch Linux
+
+Arch Linux users can install gemget from AUR. It has the package name `gemget`, and is maintained by @dalz.
+
+```shell
+yay -S gemget
+```
+
+
 # Features to add
 - ~~Support client certificates~~
 - Support interactive input for status code 10 & 11
