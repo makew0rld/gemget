@@ -67,8 +67,8 @@ yay -S gemget
 
 
 # Features to add
-- ~~Support client certificates~~
-- Support interactive input for status code 10 & 11
+- [x] Support client certificates
+- [ ] Support interactive input for status code 10 & 11
 
 ## License
 This project is under the [MIT License](./LICENSE).
