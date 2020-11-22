@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"math"
 	"os"
+	"time"
 
 	"github.com/dustin/go-humanize"
 	"github.com/makeworld-the-better-one/gemget/scanner"
@@ -17,21 +18,22 @@ var (
 	commit  = "unknown"
 	builtBy = "unknown"
 
-	insecure      = flag.BoolP("insecure", "i", false, "Skip checking the cert\n")
-	dir           = flag.StringP("directory", "d", ".", "The directory where downloads go")
-	output        = flag.StringP("output", "o", "", "Output path, for when there is only one URL.\n'-' means stdout and implies --quiet.\nIt overrides --directory.\n")
-	errorSkip     = flag.BoolP("skip", "s", false, "Move to the next URL when one fails.")
-	exts          = flag.BoolP("add-extension", "e", false, "Add .gmi extensions to gemini files that don't have it, like directories.\n")
-	numRedirs     = flag.UintP("redirects", "r", 5, "How many redirects to follow before erroring out.")
-	header        = flag.Bool("header", false, "Print out (even with --quiet) the response header to stdout in the format:\nHeader: <status> <meta>\n")
-	verFlag       = flag.BoolP("version", "v", false, "Find out what version of gemget you're running.")
-	maxSize       = flag.StringP("max-size", "m", "", "Set the file size limit. Any download that exceeds this size will\ncause an Info output and be deleted.\nLeaving it blank or setting to zero bytes will result in no limit.\nThis flag is ignored when outputting to stdout.\nFormat: <num> <optional-byte-size>\nExamples: 423, 3.2KiB, '2.5 MB', '22 MiB', '10gib', 3M\n")
-	maxSecs       = flag.UintP("max-time", "t", 0, "Set the downloading time limit, in seconds. Any download that\ntakes longer will cause an Info output and be deleted.\n")
-	inputFilePath = flag.StringP("input-file", "f", "", "Input file with a single URL on each line. Empty lines or lines starting\nwith # are ignored. URLs on the command line will be processed first.\n")
-	noBar         = flag.Bool("no-progress-bar", false, "Disable the progress bar output.")
-	proxy         = flag.StringP("proxy", "p", "", "A proxy that can requests are sent to instead.\nCan be a domain or IP with port. Port 1965 is assumed otherwise.\n")
-	cert          = flag.String("cert", "", "Path to a PEM encoded TLS client certificate to be sent with the request.\n")
-	key           = flag.String("key", "", "Path to a PEM encoded TLS key for the provided client cert.\n")
+	insecure       = flag.BoolP("insecure", "i", false, "Skip checking the cert\n")
+	dir            = flag.StringP("directory", "d", ".", "\nThe directory where downloads go")
+	output         = flag.StringP("output", "o", "", "Output path, for when there is only one URL.\n'-' means stdout and implies --quiet.\nIt overrides --directory.\n")
+	errorSkip      = flag.BoolP("skip", "s", false, "Move to the next URL when one fails.")
+	exts           = flag.BoolP("add-extension", "e", false, "Add .gmi extensions to gemini files that don't have it, like directories.\n")
+	numRedirs      = flag.UintP("redirects", "r", 5, "How many redirects to follow before erroring out.")
+	header         = flag.Bool("header", false, "Print out (even with --quiet) the response header to stdout in the format:\nHeader: <status> <meta>\n")
+	verFlag        = flag.BoolP("version", "v", false, "Find out what version of gemget you're running.")
+	maxSize        = flag.StringP("max-size", "m", "", "Set the file size limit. Any download that exceeds this size will\ncause an Info output and be deleted.\nLeaving it blank or setting to zero bytes will result in no limit.\nThis flag is ignored when outputting to stdout.\nFormat: <num> <optional-byte-size>\nExamples: 423, 3.2KiB, '2.5 MB', '22 MiB', '10gib', 3M\n")
+	maxSecs        = flag.UintP("max-time", "t", 0, "Set the downloading time limit, in seconds. Any download that\ntakes longer will cause an Info output and be deleted.\n")
+	inputFilePath  = flag.StringP("input-file", "f", "", "Input file with a single URL on each line. Empty lines or lines starting\nwith # are ignored. URLs on the command line will be processed first.\n")
+	noBar          = flag.Bool("no-progress-bar", false, "Disable the progress bar output.")
+	proxy          = flag.StringP("proxy", "p", "", "A proxy that can requests are sent to instead.\nCan be a domain or IP with port. Port 1965 is assumed otherwise.\n")
+	cert           = flag.String("cert", "", "Path to a PEM encoded TLS client certificate to be sent with the request.\n")
+	key            = flag.String("key", "", "Path to a PEM encoded TLS key for the provided client cert.\n")
+	connectTimeout = flag.Uint("connect-timeout", 15, "Max time allowed to form a connection and get the header, in seconds.\nSet to 0 for no timeout.")
 
 	quiet bool // Set in main, so that it can be changed later if needed
 
@@ -131,7 +133,10 @@ func main() {
 		fatalIsFile("input file", *inputFilePath)
 	}
 
-	client := &gemini.Client{Insecure: *insecure}
+	client := &gemini.Client{
+		Insecure:       *insecure,
+		ConnectTimeout: time.Duration(*connectTimeout) * time.Second,
+	}
 	var urls *scanner.Scanner
 
 	if *inputFilePath == "" {
