@@ -14,9 +14,19 @@ func parseURL(u string) (*url.URL, error) {
 	if err != nil {
 		return nil, errors.New(u) // Error text is just the URL
 	}
-	// Add scheme to URLs for convenience, so that you can write a command like: gemget example.com
-	// instead of: gemget gemini://example.com
-	if !strings.HasPrefix(u, "//") && !strings.Contains(u, "://") {
+
+	if u[:2] == "//" {
+		// They're trying to use a schemeless URL like: //example.com/
+		// This is not allowed as of gemini v0.14.3.
+		// Correct the URL
+		tmp := "gemini:" + u
+		parsed, err = url.Parse(tmp)
+		if err != nil {
+			return nil, errors.New(tmp)
+		}
+	} else if !strings.Contains(u, "://") {
+		// Contains no scheme info at all, like: example.com
+		// Add scheme to URL for convenience
 		tmp := "gemini://" + u
 		parsed, err = url.Parse(tmp)
 		if err != nil {
