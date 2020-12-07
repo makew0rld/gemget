@@ -15,7 +15,7 @@ func parseURL(u string) (*url.URL, error) {
 		return nil, errors.New(u) // Error text is just the URL
 	}
 
-	if u[:2] == "//" {
+	if strings.HasPrefix(u, "//") {
 		// They're trying to use a schemeless URL like: //example.com/
 		// This is not allowed as of gemini v0.14.3.
 		// Correct the URL
