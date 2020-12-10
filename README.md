@@ -15,7 +15,8 @@ Usage of ./gemget:
                                Set to 0 for no timeout. (default 15)
   -d, --directory string       
                                The directory where downloads go (default ".")
-      --header                 Print out (even with --quiet) the response header to stdout in the format:
+      --header                 
+                               Print out (even with --quiet) the response header to stdout in the format:
                                Header: <status> <meta>
                                
   -f, --input-file string      Input file with a single URL on each line. Empty lines or lines starting
@@ -36,6 +37,7 @@ Usage of ./gemget:
                                takes longer will cause an Info output and be deleted.
                                
       --no-progress-bar        Disable the progress bar output.
+                               
   -o, --output string          Output path, for when there is only one URL.
                                '-' means stdout and implies --quiet.
                                It overrides --directory.
