@@ -7,6 +7,8 @@ import (
 	"io"
 	"net/url"
 	"strings"
+
+	"github.com/makeworld-the-better-one/go-gemini"
 )
 
 func parseURL(u string) (*url.URL, error) {
@@ -33,6 +35,13 @@ func parseURL(u string) (*url.URL, error) {
 			return nil, errors.New(tmp)
 		}
 	}
+
+	// Punycode domain
+	puny, err := gemini.GetPunycodeURL(parsed.String())
+	if err != nil {
+		return nil, err
+	}
+	parsed, _ = url.Parse(puny)
 	return parsed, nil
 }
 

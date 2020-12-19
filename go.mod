@@ -4,7 +4,7 @@ go 1.14
 
 require (
 	github.com/dustin/go-humanize v1.0.0
-	github.com/makeworld-the-better-one/go-gemini v0.9.3
+	github.com/makeworld-the-better-one/go-gemini v0.11.0
 	github.com/schollz/progressbar/v3 v3.6.0
 	github.com/spf13/pflag v1.0.5
 )
