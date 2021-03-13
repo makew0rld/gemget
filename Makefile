@@ -21,6 +21,7 @@ clean:
 
 .PHONY: install
 install: gemget
+	install -d $(PREFIX)/bin/
 	install -m 755 gemget $(PREFIX)/bin/gemget
 
 .PHONY: uninstall
