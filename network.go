@@ -144,7 +144,7 @@ func fetch(n uint, u *url.URL, client *gemini.Client) {
 	// Validate status
 	switch gemini.SimplifyStatus(resp.Status) {
 	case 60:
-		switch resp.Status {
+		switch gemini.CleanStatus(resp.Status) {
 		case 60:
 			urlError("%s needs a certificate. You can provide one with --cert and --key. META string was \"%s\".", uStr, resp.Meta)
 		case 61:
