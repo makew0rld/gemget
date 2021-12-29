@@ -50,6 +50,10 @@ Usage of ./gemget:
                                
   -r, --redirects uint         How many redirects to follow before erroring out. (default 5)
   -s, --skip                   Move to the next URL when one fails.
+  --socks string               Host/address for a SOCKS5 proxy
+  --socks-pass string          Password for a SOCKS5 proxy (optional)
+  --socks-user string          Username for a SOCKS5 proxy (optional)
+
   -v, --version                Find out what version of gemget you're running.
 ```
 

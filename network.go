@@ -124,8 +124,8 @@ func fetch(n uint, u *url.URL, client *gemini.Client) {
 	var resp *gemini.Response
 	var err error
 
-	if *proxy != "" {
-		resp, err = client.FetchWithHost(*proxy, uStr)
+	if *geminiProxy != "" {
+		resp, err = client.FetchWithHost(*geminiProxy, uStr)
 	} else if len(certPEM) > 0 {
 		resp, err = client.FetchWithCert(uStr, certPEM, keyPEM)
 	} else {

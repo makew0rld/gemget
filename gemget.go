@@ -10,7 +10,9 @@ import (
 	"github.com/dustin/go-humanize"
 	"github.com/makeworld-the-better-one/gemget/scanner"
 	"github.com/makeworld-the-better-one/go-gemini"
+	gemsocks5 "github.com/makeworld-the-better-one/go-gemini-socks5"
 	flag "github.com/spf13/pflag"
+	"golang.org/x/net/proxy"
 )
 
 var (
@@ -30,10 +32,13 @@ var (
 	maxSecs        = flag.UintP("max-time", "t", 0, "Set the downloading time limit, in seconds. Any download that\ntakes longer will cause an Info output and be deleted.\n")
 	inputFilePath  = flag.StringP("input-file", "f", "", "Input file with a single URL on each line. Empty lines or lines starting\nwith # are ignored. URLs on the command line will be processed first.\n")
 	noBar          = flag.Bool("no-progress-bar", false, "Disable the progress bar output.\n")
-	proxy          = flag.StringP("proxy", "p", "", "A proxy that can requests are sent to instead.\nCan be a domain or IP with port. Port 1965 is assumed otherwise.\n")
+	geminiProxy    = flag.StringP("proxy", "p", "", "A proxy that can requests are sent to instead.\nCan be a domain or IP with port. Port 1965 is assumed otherwise.\n")
 	cert           = flag.String("cert", "", "Path to a PEM encoded TLS client certificate to be sent with the request.\n")
 	key            = flag.String("key", "", "Path to a PEM encoded TLS key for the provided client cert.\n")
 	connectTimeout = flag.Uint("connect-timeout", 15, "Max time allowed to form a connection and get the header, in seconds.\nSet to 0 for no timeout.")
+	socksHost      = flag.String("socks", "", "Host/address for a SOCKS5 proxy")
+	socksUser      = flag.String("socks-user", "", "Username for a SOCKS5 proxy (optional)")
+	socksPass      = flag.String("socks-pass", "", "Password for a SOCKS5 proxy (optional)")
 
 	quiet bool // Set in main, so that it can be changed later if needed
 
@@ -133,9 +138,20 @@ func main() {
 		fatalIsFile("input file", *inputFilePath)
 	}
 
+	// Set Proxy func for gemini client
+	var Proxy gemini.ProxyFunc = nil
+	if *socksHost != "" {
+		var auth *proxy.Auth = nil
+		if *socksUser != "" || *socksPass != "" {
+			auth = &proxy.Auth{*socksUser, *socksPass}
+		}
+		Proxy = gemsocks5.ProxyFunc(*socksHost, auth)
+	}
+
 	client := &gemini.Client{
 		Insecure:       *insecure,
 		ConnectTimeout: time.Duration(*connectTimeout) * time.Second,
+		Proxy:          Proxy,
 	}
 	var urls *scanner.Scanner
 
