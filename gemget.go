@@ -82,6 +82,9 @@ func main() {
 	}
 
 	// Validate flags
+	if (*output == "-") {
+		quiet = true
+	}
 	if (len(flag.Args()) > 1 || *inputFilePath != "") && *output != "" && *output != "-" {
 		fatal("The output flag cannot be specified when there are multiple URLs, unless it is '-', meaning stdout.")
 	}
