@@ -82,7 +82,7 @@ func main() {
 	}
 
 	// Validate flags
-	if (*output == "-") {
+	if *output == "-" {
 		quiet = true
 	}
 	if (len(flag.Args()) > 1 || *inputFilePath != "") && *output != "" && *output != "-" {

@@ -55,7 +55,7 @@ func saveFile(resp *gemini.Response, u *url.URL) {
 		savePath = *output
 	}
 
-	f, err := os.OpenFile(savePath, os.O_CREATE|os.O_WRONLY, 0644)
+	f, err := os.OpenFile(savePath, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0644)
 	if err != nil {
 		resp.Body.Close()
 		fatal("Couldn't create file %s: %v", savePath, err)
