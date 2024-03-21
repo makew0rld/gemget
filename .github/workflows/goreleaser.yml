@@ -24,3 +24,14 @@ jobs:
           args: release --rm-dist
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Generate release tarball
+        run: |
+          VERSION=${GITHUB_REF_NAME#v}
+          tar czf gemget-${VERSION}.tar.gz --transform "s,^,gemget-${VERSION}/," --exclude dist *
+      - name: Upload release tarball
+        uses: softprops/action-gh-release@master
+        with:
+          files: gemget-*.tar.gz
+          append_body: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_REPOS }}
