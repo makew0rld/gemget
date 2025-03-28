@@ -1,6 +1,7 @@
 module github.com/makeworld-the-better-one/gemget
 
-go 1.14
+go 1.23.0
+
 toolchain go1.24.1
 
 require (
@@ -13,7 +14,6 @@ require (
 )
 
 require (
-	github.com/google/go-cmp v0.6.0 // indirect
 	github.com/mattn/go-runewidth v0.0.9 // indirect
 	github.com/mitchellh/colorstring v0.0.0-20190213212951-d06e56a500db // indirect
 	golang.org/x/text v0.22.0 // indirect
