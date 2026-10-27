@@ -82,6 +82,18 @@ Arch Linux users can install gemget from AUR. It has the package name `gemget`, 
 yay -S gemget
 ```
 
+## FreeBSD
+
+FreeBSD users can install gemget from ports. It has the package name `gemget`, and is maintained by @RandirFog.
+
+To install the package:
+```shell
+pkg install gemget
+```
+To install the port:
+```shell
+cd /usr/ports/net/gemget/ && make install clean
+```
 
 ## Features to add
 - [x] Support client certificates
